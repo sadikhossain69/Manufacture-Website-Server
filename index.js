@@ -21,6 +21,16 @@ async function run() {
     try{
         await client.connect()
         console.log("DB Connected"); 
+
+        const toolCollection = client.db('marufacture').collection('tools')
+
+        app.get('/tools', async(req, res) => {
+            const query = {}
+            const cursor = toolCollection.find(query)
+            const result = await cursor.toArray()
+            res.send(result)
+        })
+
     }
     finally{
         // await client.close()
