@@ -3,6 +3,7 @@ const app = express()
 const cors = require('cors');
 const req = require('express/lib/request');
 const res = require('express/lib/response');
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000
 require('dotenv').config()
@@ -23,6 +24,7 @@ async function run() {
         console.log("DB Connected"); 
 
         const toolCollection = client.db('marufacture').collection('tools')
+        const userCollection = client.db('marufacture').collection('users')
 
         app.get('/tools', async(req, res) => {
             const query = {}
@@ -36,6 +38,19 @@ async function run() {
             const query = {_id: ObjectId(id)}
             const result = await toolCollection.findOne(query)
             res.send(result)
+        })
+
+        app.put('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: user,
+            };
+            const result = await userCollection.updateOne(filter, updateDoc, options);
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30d' })
+            res.send({ result, token: token });
         })
 
     }
