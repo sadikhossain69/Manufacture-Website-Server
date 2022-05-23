@@ -40,6 +40,7 @@ async function run() {
 
         const toolCollection = client.db('marufacture').collection('tools')
         const userCollection = client.db('marufacture').collection('users')
+        const orderCollection = client.db('marufacture').collection('orders')
 
         app.get('/tools', async(req, res) => {
             const query = {}
@@ -66,6 +67,17 @@ async function run() {
             const result = await userCollection.updateOne(filter, updateDoc, options);
             const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30d' })
             res.send({ result, token: token });
+        })
+
+        app.post('/orders', verifyJWT, async(req, res) => {
+            const orders = req.body
+            const query = {toolName: orders.toolName, email: orders.email}
+            const exists = await orderCollection.findOne(query)
+            if(exists) {
+                return res.send({ success: false, orders: exists })
+            }
+            const result = await orderCollection.insertOne(orders)
+            res.send({ success: true, result })
         })
 
     }
