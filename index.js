@@ -80,6 +80,19 @@ async function run() {
             res.send({ success: true, result })
         })
 
+        app.get('/orders', verifyJWT, async(req, res) => {
+            const email = req.query?.email
+            const decodedEmail = req.decoded?.email
+            if(email === decodedEmail){
+                const query = {email: email}
+                const orders = await orderCollection.find(query).toArray()
+                return res.send(orders)
+            }
+            else{
+                return res.status(403).send({message: "Forbidded Access"})
+            }
+        })
+
     }
     finally{
         // await client.close()
