@@ -41,6 +41,7 @@ async function run() {
         const toolCollection = client.db('marufacture').collection('tools')
         const userCollection = client.db('marufacture').collection('users')
         const orderCollection = client.db('marufacture').collection('orders')
+        const reviewCollection = client.db('marufacture').collection('reviews')
 
         app.get('/tools', async(req, res) => {
             const query = {}
@@ -97,6 +98,11 @@ async function run() {
             const id = req.params.id
             const filter = {_id: ObjectId(id)}
             const result = await orderCollection.deleteOne(filter)
+            res.send(result)
+        })
+
+        app.get('/reviews', async(req, res) => {
+            const result = await reviewCollection.find({}).toArray()
             res.send(result)
         })
 
