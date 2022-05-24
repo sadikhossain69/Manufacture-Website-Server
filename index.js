@@ -34,25 +34,26 @@ function verifyJWT(req, res, next) {
 
 
 async function run() {
-    try{
+    try {
         await client.connect()
-        console.log("DB Connected"); 
+        console.log("DB Connected");
 
         const toolCollection = client.db('marufacture').collection('tools')
         const userCollection = client.db('marufacture').collection('users')
         const orderCollection = client.db('marufacture').collection('orders')
         const reviewCollection = client.db('marufacture').collection('reviews')
+        const profileCollection = client.db('marufacture').collection('profiles')
 
-        app.get('/tools', async(req, res) => {
+        app.get('/tools', async (req, res) => {
             const query = {}
             const cursor = toolCollection.find(query)
             const result = await cursor.toArray()
             res.send(result)
         })
 
-        app.get('/tools/:id', verifyJWT, async(req, res) => {
+        app.get('/tools/:id', verifyJWT, async (req, res) => {
             const id = req.params.id
-            const query = {_id: ObjectId(id)}
+            const query = { _id: ObjectId(id) }
             const result = await toolCollection.findOne(query)
             res.send(result)
         })
@@ -70,50 +71,62 @@ async function run() {
             res.send({ result, token: token });
         })
 
-        app.post('/orders', verifyJWT, async(req, res) => {
+        app.post('/orders', verifyJWT, async (req, res) => {
             const orders = req.body
-            const query = {toolName: orders.toolName, email: orders.email}
+            const query = { toolName: orders.toolName, email: orders.email }
             const exists = await orderCollection.findOne(query)
-            if(exists) {
+            if (exists) {
                 return res.send({ success: false, orders: exists })
             }
             const result = await orderCollection.insertOne(orders)
             res.send({ success: true, result })
         })
 
-        app.get('/orders', verifyJWT, async(req, res) => {
+        app.get('/orders', verifyJWT, async (req, res) => {
             const email = req.query?.email
             const decodedEmail = req.decoded?.email
-            if(email === decodedEmail){
-                const query = {email: email}
+            if (email === decodedEmail) {
+                const query = { email: email }
                 const orders = await orderCollection.find(query).toArray()
                 return res.send(orders)
             }
-            else{
-                return res.status(403).send({message: "Forbidded Access"})
+            else {
+                return res.status(403).send({ message: "Forbidded Access" })
             }
         })
 
-        app.delete('/orders/:id', verifyJWT, async(req, res) => {
+        app.delete('/orders/:id', verifyJWT, async (req, res) => {
             const id = req.params.id
-            const filter = {_id: ObjectId(id)}
+            const filter = { _id: ObjectId(id) }
             const result = await orderCollection.deleteOne(filter)
             res.send(result)
         })
 
-        app.get('/reviews', async(req, res) => {
+        app.get('/reviews', async (req, res) => {
             const result = await reviewCollection.find({}).toArray()
             res.send(result)
         })
 
-        app.post('/reviews', verifyJWT, async(req, res) => {
+        app.post('/reviews', verifyJWT, async (req, res) => {
             const review = req.body
             const result = await reviewCollection.insertOne(review)
             res.send(result)
         })
 
+        app.put('/profile_update/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email
+            const updatedProfile = req.body
+            const filter = { email: email }
+            const options = { upsert: true }
+            const updateDoc = {
+                $set: updatedProfile,
+            }
+            const result = await profileCollection.updateOne(filter, updateDoc, options)
+            res.send(result)
+        })
+
     }
-    finally{
+    finally {
         // await client.close()
     }
 }
