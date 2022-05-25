@@ -44,6 +44,17 @@ async function run() {
         const reviewCollection = client.db('marufacture').collection('reviews')
         const profileCollection = client.db('marufacture').collection('profiles')
 
+        const verifyAdmin = async (req, res, next) => {
+            const requester = req.decoded?.email
+            const requsterAccount = await userCollection.findOne({ email: requester })
+            if (requsterAccount.role === 'admin') {
+                next()
+            }
+            else {
+                return res.status(403).send({ message: 'Forbidden Access' })
+            }
+        }
+
         app.get('/tools', async (req, res) => {
             const query = {}
             const cursor = toolCollection.find(query)
@@ -132,12 +143,12 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/user', verifyJWT, async(req, res) => {
-            const users = await userCollection.find().toArray() 
+        app.get('/user', verifyJWT, async (req, res) => {
+            const users = await userCollection.find().toArray()
             res.send(users)
         })
 
-        app.put('/user/admin/:email', verifyJWT, async (req, res) => {
+        app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
             const email = req.params.email;
             const filter = { email: email };
             const updateDoc = {
