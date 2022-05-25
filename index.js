@@ -69,6 +69,12 @@ async function run() {
             res.send(result)
         })
 
+        app.post('/tools', verifyJWT, verifyAdmin, async(req, res) => {
+            const tool = req.body
+            const result = await toolCollection.insertOne(tool)
+            res.send(result)
+        })
+
         app.put('/user/:email', async (req, res) => {
             const email = req.params.email;
             const user = req.body;
