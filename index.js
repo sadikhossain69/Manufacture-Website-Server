@@ -119,6 +119,13 @@ async function run() {
             }
         })
 
+        app.get('/orders/:id', verifyJWT, async(req, res) => {
+            const id = req.params.id
+            const query = {_id: ObjectId(id)}
+            const result = await orderCollection.findOne(query)
+            res.send(result)
+        })
+
         app.delete('/orders/:id', verifyJWT, async (req, res) => {
             const id = req.params.id
             const filter = { _id: ObjectId(id) }
