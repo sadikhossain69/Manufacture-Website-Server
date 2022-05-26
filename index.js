@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000
 require('dotenv').config()
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 // Middleware
 app.use(cors())
@@ -54,6 +55,20 @@ async function run() {
                 return res.status(403).send({ message: 'Forbidden Access' })
             }
         }
+
+        app.post('/create-payment-intent', verifyJWT, async(req, res) => {
+            const service = req.body
+            const price = service.price
+            const amount = price * 100
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types:['card']
+            })
+            res.send({
+                clientSecret: paymentIntent.client_secret
+            })
+        }) 
 
         app.get('/tools', async (req, res) => {
             const query = {}
