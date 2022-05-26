@@ -142,6 +142,11 @@ async function run() {
             res.send(result)
         })
 
+        app.get('/admin/orders', verifyJWT, verifyAdmin, async(req, res) => {
+            const result = await orderCollection.find().toArray()
+            res.send(result)
+        })
+
         app.patch('/orders/:id', verifyJWT, async(req, res) => {
             const id = req.params.id
             const payment = req.body
@@ -155,6 +160,19 @@ async function run() {
             }
             const updatedOrder = await orderCollection.updateOne(filter, updateDoc)
             const result = await paymentCollection.insertOne(payment)
+            res.send(updatedOrder)
+        })
+
+        app.patch('/admin/orders/:id', verifyJWT, async(req, res) => {
+            const id = req.params.id
+            const filter = {_id: ObjectId(id)}
+            const updateDoc = {
+                $set: {
+                    adminAccept: true,
+                    
+                }
+            }
+            const updatedOrder = await orderCollection.updateOne(filter, updateDoc)
             res.send(updatedOrder)
         })
 
