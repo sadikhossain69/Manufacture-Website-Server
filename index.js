@@ -44,6 +44,7 @@ async function run() {
         const orderCollection = client.db('marufacture').collection('orders')
         const reviewCollection = client.db('marufacture').collection('reviews')
         const profileCollection = client.db('marufacture').collection('profiles')
+        const paymentCollection = client.db('marufacture').collection('payment')
 
         const verifyAdmin = async (req, res, next) => {
             const requester = req.decoded?.email
@@ -139,6 +140,22 @@ async function run() {
             const query = {_id: ObjectId(id)}
             const result = await orderCollection.findOne(query)
             res.send(result)
+        })
+
+        app.patch('/orders/:id', verifyJWT, async(req, res) => {
+            const id = req.params.id
+            const payment = req.body
+            const filter = {_id: ObjectId(id)}
+            const updateDoc = {
+                $set: {
+                    paid: true,
+                    transactionId: payment.transactionId,
+                    
+                }
+            }
+            const updatedOrder = await orderCollection.updateOne(filter, updateDoc)
+            const result = await paymentCollection.insertOne(payment)
+            res.send(updatedOrder)
         })
 
         app.delete('/orders/:id', verifyJWT, async (req, res) => {
